@@ -1,7 +1,7 @@
-import pyad
 import pyad.aduser 
+import pyad.adcontainer
 
-#STEP1: Create user input for name, userid, password
+# STEP1: Create user input for name, userid, password
 def setup():
     while True:
         first_name = input("Enter first name: ")
@@ -18,24 +18,23 @@ def setup():
 def create_user(first_name, last_name, userid, password):
     try:    
         # Connect to Active Directory
-        pyad.set_defaults(ldap_server="Kratos")
+        pyad.adcontainer.set_defaults(ldap_server="Kratos")
+
+        # Get the container object where the user should be created
+        container = pyad.adcontainer.ADContainer.from_dn("OU=Users,DC=Kratos,DC=com")  # Adjust the OU accordingly
 
         # Create user account 
         new_user = pyad.aduser.ADUser.create(
-            userid, 
+            f"CN={userid}",  # Adjust the distinguished name (DN) if needed
             password=password,
             optional_attributes={
                 'givenName': first_name,
                 'sn': last_name,
                 'displayName': f"{first_name} {last_name}",
                 'description': 'Created via python script'
-            }
+            },
+            container_object=container
         )
-        print("User account created successfully")
-    except pyad.pyadexceptions.ADObjectAlreadyExistsError:
-        print(f"User '{userid}' already exists.")
-    except pyad.pyadexceptions.ADCommunicationError as e:
-        print(f"Communication error with Active Directory: {e}")
     except Exception as e:
         print(f"Error creating user account: {e}")
 
